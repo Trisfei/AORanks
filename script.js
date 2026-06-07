@@ -940,9 +940,12 @@
         monthlyStats[m.key] = { americas: 0, europe: 0, asia: 0 };
       }
 
-      // Para leaderboards: apenas mês selecionado e servidores filtrados
-      const guildAgg = Object.create(null);
-      const playerAgg = Object.create(null);
+      // Para leaderboards: apenas mes selecionado e servidores filtrados
+      const guildAgg    = Object.create(null);
+      const playerAgg   = Object.create(null);
+      // Leaderboard global: TODOS os meses do ano + servidores filtrados
+      const guildAggAll  = Object.create(null);
+      const playerAggAll = Object.create(null);
 
       for (const r of allResults) {
         if (!r.text) continue;
@@ -951,18 +954,18 @@
 
         // Acumula stats por servidor (todos os meses)
         if (r.kind === 'guild') {
-          const killsSum = rows.reduce((a, x) => a + x.kills, 0);
+          const killsSum  = rows.reduce((a, x) => a + x.kills, 0);
           const deathsSum = rows.reduce((a, x) => a + x.deaths, 0);
-          const fameSum = rows.reduce((a, x) => a + x.fame, 0);
-          serverStats[srv].kills += killsSum;
+          const fameSum   = rows.reduce((a, x) => a + x.fame, 0);
+          serverStats[srv].kills  += killsSum;
           serverStats[srv].deaths += deathsSum;
-          serverStats[srv].fame += fameSum;
+          serverStats[srv].fame   += fameSum;
           if (monthlyStats[r.month]) {
             monthlyStats[r.month][srv] += killsSum;
           }
         }
 
-        // Leaderboard: mês selecionado + servidores exibidos
+        // Leaderboard mensal: mes selecionado + servidores exibidos
         if (r.month === month && displayServers.includes(srv)) {
           const target = r.kind === 'guild' ? guildAgg : playerAgg;
           for (const row of rows) {
@@ -970,25 +973,149 @@
             if (!target[id]) {
               target[id] = { ...row, origin: srv };
             } else {
-              target[id].kills += row.kills;
+              target[id].kills  += row.kills;
               target[id].deaths += row.deaths;
-              target[id].fame += row.fame;
+              target[id].fame   += row.fame;
+            }
+          }
+        }
+
+        // Leaderboard global anual: todos os meses + servidores exibidos
+        if (displayServers.includes(srv)) {
+          const targetAll = r.kind === 'guild' ? guildAggAll : playerAggAll;
+          for (const row of rows) {
+            const id = row.name.toLowerCase() + '_' + srv;
+            if (!targetAll[id]) {
+              targetAll[id] = { ...row, origin: srv };
+            } else {
+              targetAll[id].kills  += row.kills;
+              targetAll[id].deaths += row.deaths;
+              targetAll[id].fame   += row.fame;
             }
           }
         }
       }
 
-      const topGuilds = Object.values(guildAgg).sort((a, b) => b.kills - a.kills);
-      const topPlayers = Object.values(playerAgg).sort((a, b) => b.kills - a.kills);
+      // ── Sorted arrays — monthly ──────────────────────────────────────────────
+      const topGuilds        = Object.values(guildAgg).sort((a, b) => b.kills   - a.kills);
+      const topPlayers       = Object.values(playerAgg).sort((a, b) => b.kills  - a.kills);
+      const topGuildsFame    = Object.values(guildAgg).sort((a, b) => b.fame    - a.fame);
+      const topPlayersFame   = Object.values(playerAgg).sort((a, b) => b.fame   - a.fame);
+      const topGuildsDeaths  = Object.values(guildAgg).sort((a, b) => b.deaths  - a.deaths);
+      const topPlayersDeaths = Object.values(playerAgg).sort((a, b) => b.deaths - a.deaths);
+
+      // ── Sorted arrays — all months (global annual) ───────────────────────────
+      const allTopGuilds        = Object.values(guildAggAll).sort((a, b) => b.kills   - a.kills);
+      const allTopPlayers       = Object.values(playerAggAll).sort((a, b) => b.kills  - a.kills);
+      const allTopGuildsFame    = Object.values(guildAggAll).sort((a, b) => b.fame    - a.fame);
+      const allTopPlayersFame   = Object.values(playerAggAll).sort((a, b) => b.fame   - a.fame);
+      const allTopGuildsDeaths  = Object.values(guildAggAll).sort((a, b) => b.deaths  - a.deaths);
+      const allTopPlayersDeaths = Object.values(playerAggAll).sort((a, b) => b.deaths - a.deaths);
 
       const sum = (arr, k) => arr.reduce((a, x) => a + (x[k] || 0), 0);
-      const totalKills = displayServers.reduce((a, s) => a + serverStats[s].kills, 0);
-      const totalFame = displayServers.reduce((a, s) => a + serverStats[s].fame, 0);
+      const totalKills  = displayServers.reduce((a, s) => a + serverStats[s].kills, 0);
+      const totalFame   = displayServers.reduce((a, s) => a + serverStats[s].fame,  0);
       const totalGuilds = topGuilds.length;
       const totalPlayers = topPlayers.length;
 
       const badge = (i) => i === 0 ? 'badge-gold' : i === 1 ? 'badge-silver' : i === 2 ? 'badge-bronze' : 'badge-normal';
       const fmt = (n) => Number(n || 0).toLocaleString('en-US');
+
+      // ── Helper: renders a top-10 leaderboard panel ──────────────────────────
+      function renderTop10Panel(title, icon, items, valueKey, colorClass, maxVal, fillClass) {
+        const top10 = items.slice(0, 10);
+        if (!top10.length) return `
+          <div class="lb-panel">
+            <div class="panel-header"><h3>${icon} ${title}</h3><span class="tag-live-total">TOP 10</span></div>
+            <p style="color:var(--text-secondary);font-size:12px;padding:16px 0;">No data.</p>
+          </div>`;
+        const rows = top10.map((item, i) => {
+          const val = item[valueKey] || 0;
+          const pct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0;
+          let sub;
+          if (valueKey === 'kills')  sub = `<span style="color:var(--accent-red);font-size:10px;">${fmt(item.deaths)} deaths</span>`;
+          else if (valueKey === 'deaths') sub = `<span style="color:var(--accent-green);font-size:10px;">${fmt(item.kills)} kills</span>`;
+          else sub = `<span style="color:var(--accent-green);font-size:10px;">${fmt(item.kills)} kills</span>`;
+          const nameLine = item.guild && item.guild !== item.name
+            ? `<span class="entity-sub" style="color:var(--text-secondary);font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.guild)}</span>`
+            : '';
+          const serverTag = item.origin ? `<span class="server-badge" style="margin-left:4px;vertical-align:middle;">${item.origin.toUpperCase().slice(0,3)}</span>` : '';
+          return `
+            <div class="panel-row">
+              <div class="row-main-meta">
+                <div class="row-position ${badge(i)}">${i + 1}</div>
+                <div class="row-details">
+                  <span class="entity-name">${escapeHtml(item.name)}${serverTag}</span>
+                  ${nameLine}
+                  <div class="progress-bar-container">
+                    <div class="progress-fill ${fillClass}" style="width:${pct}%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row-stat">
+                <span class="${colorClass}">${fmt(val)}</span>
+                <div style="font-size:10px;color:var(--text-secondary);text-align:right;margin-top:2px;">${sub}</div>
+              </div>
+            </div>`;
+        }).join('');
+        return `
+          <div class="lb-panel">
+            <div class="panel-header"><h3>${icon} ${title}</h3><span class="tag-live-total">TOP 10</span></div>
+            <div class="panel-list">${rows}</div>
+          </div>`;
+      }
+
+      // ── Monthly maxima ───────────────────────────────────────────────────────
+      const maxGuildKills   = topGuilds[0]        ? topGuilds[0].kills        : 1;
+      const maxPlayerKills  = topPlayers[0]       ? topPlayers[0].kills       : 1;
+      const maxGuildFame    = topGuildsFame[0]     ? topGuildsFame[0].fame     : 1;
+      const maxPlayerFame   = topPlayersFame[0]   ? topPlayersFame[0].fame    : 1;
+      const maxGuildDeaths  = topGuildsDeaths[0]  ? topGuildsDeaths[0].deaths  : 1;
+      const maxPlayerDeaths = topPlayersDeaths[0] ? topPlayersDeaths[0].deaths : 1;
+
+      // ── All-months maxima ────────────────────────────────────────────────────
+      const allMaxGuildKills   = allTopGuilds[0]        ? allTopGuilds[0].kills        : 1;
+      const allMaxPlayerKills  = allTopPlayers[0]       ? allTopPlayers[0].kills       : 1;
+      const allMaxGuildFame    = allTopGuildsFame[0]    ? allTopGuildsFame[0].fame     : 1;
+      const allMaxPlayerFame   = allTopPlayersFame[0]  ? allTopPlayersFame[0].fame    : 1;
+      const allMaxGuildDeaths  = allTopGuildsDeaths[0] ? allTopGuildsDeaths[0].deaths  : 1;
+      const allMaxPlayerDeaths = allTopPlayersDeaths[0]? allTopPlayersDeaths[0].deaths : 1;
+
+      const monthLabel = PT_MONTH[month] || month;
+      const yearLabel  = String(year);
+
+      const leaderboardsHtml = `
+        <!-- ── Monthly Top 10 ─────────────────────────────────────── -->
+        <div class="top10-section">
+          <div class="top10-header">
+            <h2>📅 Top 10 — ${monthLabel} ${yearLabel}</h2>
+            <span style="font-size:12px;color:var(--text-secondary);">Selected month · all servers combined</span>
+          </div>
+          <div class="top10-grid top10-grid-6">
+            ${renderTop10Panel('Guilds · Kills',   '⚔️',  topGuilds,        'kills',  'value-kills',  maxGuildKills,   'fill-guild')}
+            ${renderTop10Panel('Players · Kills',  '🔺',  topPlayers,       'kills',  'value-kills',  maxPlayerKills,  'fill-player')}
+            ${renderTop10Panel('Guilds · Deaths',  '💀',  topGuildsDeaths,  'deaths', 'cell-deaths',  maxGuildDeaths,  'fill-guild')}
+            ${renderTop10Panel('Players · Deaths', '☠️',  topPlayersDeaths, 'deaths', 'cell-deaths',  maxPlayerDeaths, 'fill-player')}
+            ${renderTop10Panel('Guilds · Fame',    '🏆',  topGuildsFame,    'fame',   'cell-fame',    maxGuildFame,    'fill-guild')}
+            ${renderTop10Panel('Players · Fame',   '👑',  topPlayersFame,   'fame',   'cell-fame',    maxPlayerFame,   'fill-player')}
+          </div>
+        </div>
+
+        <!-- ── Annual Global Top 10 ───────────────────────────────── -->
+        <div class="top10-section" style="margin-top:40px;">
+          <div class="top10-header">
+            <h2>🌐 Global Top 10 — All of ${yearLabel}</h2>
+            <span style="font-size:12px;color:var(--text-secondary);">All months combined · all servers combined</span>
+          </div>
+          <div class="top10-grid top10-grid-6">
+            ${renderTop10Panel('Guilds · Kills',   '⚔️',  allTopGuilds,        'kills',  'value-kills', allMaxGuildKills,   'fill-guild')}
+            ${renderTop10Panel('Players · Kills',  '🔺',  allTopPlayers,       'kills',  'value-kills', allMaxPlayerKills,  'fill-player')}
+            ${renderTop10Panel('Guilds · Deaths',  '💀',  allTopGuildsDeaths,  'deaths', 'cell-deaths', allMaxGuildDeaths,  'fill-guild')}
+            ${renderTop10Panel('Players · Deaths', '☠️',  allTopPlayersDeaths, 'deaths', 'cell-deaths', allMaxPlayerDeaths, 'fill-player')}
+            ${renderTop10Panel('Guilds · Fame',    '🏆',  allTopGuildsFame,    'fame',   'cell-fame',   allMaxGuildFame,    'fill-guild')}
+            ${renderTop10Panel('Players · Fame',   '👑',  allTopPlayersFame,   'fame',   'cell-fame',   allMaxPlayerFame,   'fill-player')}
+          </div>
+        </div>`;
 
       // Dados do gráfico: meses no eixo X, kills por servidor
       const chartMonths = monthsForYear.map(m => PT_MONTH[m.key] || m.cap);
@@ -1029,6 +1156,8 @@
             </div>
           </div>
         </div>
+
+        ${leaderboardsHtml}
 
         <style>
           .chart-section {
@@ -1090,8 +1219,102 @@
             width: 100% !important;
             height: 100% !important;
           }
+
+          /* ── Top 10 Global Section ───────────────────────────────────── */
+          .top10-section {
+            margin-top: 32px;
+          }
+          .top10-header {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin-bottom: 20px;
+          }
+          .top10-header h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+          }
+          .top10-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+          }
+          .top10-grid-6 {
+            grid-template-columns: repeat(6, 1fr);
+          }
+          .lb-panel {
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+          }
+          .lb-panel .panel-header {
+            margin-bottom: 16px;
+          }
+          .lb-panel .panel-header h3 {
+            font-size: 13px;
+            font-weight: 700;
+          }
+          .lb-panel .panel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .lb-panel .panel-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.01);
+            border: 1px solid #172033;
+            gap: 10px;
+          }
+          .lb-panel .row-main-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+          }
+          .lb-panel .row-position {
+            width: 24px;
+            height: 24px;
+            font-size: 10px;
+            flex-shrink: 0;
+          }
+          .lb-panel .row-details {
+            flex: 1;
+            min-width: 0;
+            margin-right: 8px;
+          }
+          .lb-panel .entity-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+          }
+          .lb-panel .row-stat {
+            text-align: right;
+            flex-shrink: 0;
+            font-size: 12.5px;
+            font-variant-numeric: tabular-nums;
+          }
+          .lb-panel .progress-bar-container {
+            margin-top: 4px;
+          }
+          @media (max-width: 1400px) {
+            .top10-grid-6 { grid-template-columns: repeat(3, 1fr); }
+          }
+          @media (max-width: 1200px) {
+            .top10-grid, .top10-grid-6 { grid-template-columns: repeat(2, 1fr); }
+          }
           @media (max-width: 768px) {
             .chart-section { grid-template-columns: 1fr; }
+            .top10-grid, .top10-grid-6 { grid-template-columns: 1fr; }
           }
         </style>`;
 
