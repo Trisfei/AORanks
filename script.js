@@ -894,8 +894,8 @@
       for (let i = 1; i < lines.length; i++) {
         const c = parseCSVLine(lines[i]);
         if (!c.length) continue;
-        const name = c[map.NAME];
-        if (!name || name === '0') continue;
+        const name = (c[map.NAME] || '').trim();
+        if (!name || name === '0' || name === '-') continue;
         const guild = map.GUILD !== -1 ? (c[map.GUILD] || '').trim() : '';
         // Exclui players sem guilda do ranking da Home
         if (kind === 'player' && (!guild || guild === '0' || guild === '-')) continue;
