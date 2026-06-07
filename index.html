@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AO Ranks // Elite PvP Statistics Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+      /* Ensure TIME cells always show tabular numbers and no wrapping */
+      td.col-time { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"></div>
+                <div class="brand-text">
+                    <h2>AO RANKS</h2>
+                    <span>COMPETITIVE HUB</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <span class="menu-category">General</span>
+                <button class="nav-item active" data-view="home">
+                    <span class="nav-icon">📊</span> Home
+                </button>
+                <button class="nav-item" data-view="general-battles">
+                    <span class="nav-icon">⚔️</span> Battles
+                </button>
+                
+                <span class="menu-category">Guilds</span>
+                <button class="nav-item" data-view="guilds-battles">
+                    <span class="nav-icon">⚔️</span> Battles
+                </button>
+                <button class="nav-item" data-view="guilds-month">
+                    <span class="nav-icon">📅</span> Monthly Ranking
+                </button>
+                <button class="nav-item" data-view="guilds-winrate">
+                    <span class="nav-icon">🏆</span> Win Rate
+                </button>
+                
+                <span class="menu-category">Players</span>
+                <button class="nav-item" data-view="players-battles">
+                    <span class="nav-icon">🔺</span> Battles
+                </button>
+                <button class="nav-item" data-view="players-month">
+                    <span class="nav-icon">👑</span> Monthly Ranking
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="connection-status">
+                    <span class="indicator internet-live"></span>
+                    <span class="status-text">CDN Network Stable</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="page-context">
+                    <h1 id="page-title">Home Dashboard</h1>
+                    <p id="page-subtitle">Analytical summary of the Albion Online competitive scene.</p>
+                </div>
+                <div class="top-bar-actions">
+                    <div class="global-filters" id="global-filters-box" style="display: none;">
+                        <div class="select-custom">
+                            <select id="select-server">
+                                <option value="global">All Servers</option>
+                                <option value="americas">Americas</option>
+                                <option value="europe">Europe</option>
+                                <option value="asia">Asia</option>
+                            </select>
+                        </div>
+                        <div class="select-custom" id="year-filter-container" style="display: none;">
+                            <select id="select-year"><option value="">Loading...</option></select>
+                        </div>
+                        <div class="select-custom" id="month-filter-container" style="display: none;">
+                            <select id="select-month"><option value="">Loading...</option></select>
+                        </div>
+                    </div>
+                    <div class="search-box-wrapper" id="search-box-container" style="display: none;">
+                        <div class="search-field">
+                            <span class="icon-search">🔍</span>
+                            <input type="text" id="search-input" placeholder="Filter records..." autocomplete="off">
+                            <button id="clear-search" style="display: none;">Clear</button>
+                        </div>
+                    </div>
+                    <div class="meta-counter-card">
+                        <span class="counter-label">Records Processed</span>
+                        <span class="counter-value" id="total-rows">DASHBOARD</span>
+                    </div>
+                </div>
+            </header>
+            <div class="content-body" id="table-wrapper"></div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

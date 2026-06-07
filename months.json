@@ -1,0 +1,9 @@
+{
+  "months": [
+    { "key": "january",   "year": 2026, "hasBattle": true },
+    { "key": "february",  "year": 2026, "hasBattle": true },
+    { "key": "march",     "year": 2026, "hasBattle": true },
+    { "key": "april",     "year": 2026, "hasBattle": true },
+    { "key": "may",       "year": 2026, "hasBattle": true }
+  ]
+}
