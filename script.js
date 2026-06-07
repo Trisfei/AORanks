@@ -1088,24 +1088,8 @@
       const yearLabel  = String(year);
 
       const leaderboardsHtml = `
-        <!-- ── Monthly Top 10 ─────────────────────────────────────── -->
-        <div class="top10-section">
-          <div class="top10-header">
-            <h2>📅 Top 10 — ${monthLabel} ${yearLabel}</h2>
-            <span style="font-size:12px;color:var(--text-secondary);">Selected month · all servers combined</span>
-          </div>
-          <div class="top10-grid top10-grid-6">
-            ${renderTop10Panel('Guilds · Kills',   '⚔️',  topGuilds,        'kills',  'value-kills',  maxGuildKills,   'fill-guild')}
-            ${renderTop10Panel('Players · Kills',  '🔺',  topPlayers,       'kills',  'value-kills',  maxPlayerKills,  'fill-player')}
-            ${renderTop10Panel('Guilds · Deaths',  '💀',  topGuildsDeaths,  'deaths', 'cell-deaths',  maxGuildDeaths,  'fill-guild')}
-            ${renderTop10Panel('Players · Deaths', '☠️',  topPlayersDeaths, 'deaths', 'cell-deaths',  maxPlayerDeaths, 'fill-player')}
-            ${renderTop10Panel('Guilds · Fame',    '🏆',  topGuildsFame,    'fame',   'cell-fame',    maxGuildFame,    'fill-guild')}
-            ${renderTop10Panel('Players · Fame',   '👑',  topPlayersFame,   'fame',   'cell-fame',    maxPlayerFame,   'fill-player')}
-          </div>
-        </div>
-
         <!-- ── Annual Global Top 10 ───────────────────────────────── -->
-        <div class="top10-section" style="margin-top:40px;">
+        <div class="top10-section">
           <div class="top10-header">
             <h2>🌐 Global Top 10 — All of ${yearLabel}</h2>
             <span style="font-size:12px;color:var(--text-secondary);">All months combined · all servers combined</span>
