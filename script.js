@@ -896,9 +896,12 @@
         if (!c.length) continue;
         const name = c[map.NAME];
         if (!name || name === '0') continue;
+        const guild = map.GUILD !== -1 ? (c[map.GUILD] || '').trim() : '';
+        // Exclui players sem guilda do ranking da Home
+        if (kind === 'player' && (!guild || guild === '0' || guild === '-')) continue;
         out.push({
           name,
-          guild: map.GUILD !== -1 ? (c[map.GUILD] || 'No Guild') : '',
+          guild: guild || '',
           kills: toInt(c[map.KILLS]),
           deaths: map.DEATHS !== -1 ? toInt(c[map.DEATHS]) : 0,
           fame: map.FAME !== -1 ? toInt(c[map.FAME]) : 0,
