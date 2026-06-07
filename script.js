@@ -1088,18 +1088,21 @@
       const yearLabel  = String(year);
 
       const leaderboardsHtml = `
-        <!-- ── Annual Global Top 10 ───────────────────────────────── -->
         <div class="top10-section">
           <div class="top10-header">
             <h2>🌐 Global Top 10 — All of ${yearLabel}</h2>
             <span style="font-size:12px;color:var(--text-secondary);">All months combined · all servers combined</span>
           </div>
-          <div class="top10-grid top10-grid-6">
+          <div class="top10-row-label">⚔️ Guilds</div>
+          <div class="top10-guilds-row">
             ${renderTop10Panel('Guilds · Kills',   '⚔️',  allTopGuilds,        'kills',  'value-kills', allMaxGuildKills,   'fill-guild')}
-            ${renderTop10Panel('Players · Kills',  '🔺',  allTopPlayers,       'kills',  'value-kills', allMaxPlayerKills,  'fill-player')}
             ${renderTop10Panel('Guilds · Deaths',  '💀',  allTopGuildsDeaths,  'deaths', 'cell-deaths', allMaxGuildDeaths,  'fill-guild')}
-            ${renderTop10Panel('Players · Deaths', '☠️',  allTopPlayersDeaths, 'deaths', 'cell-deaths', allMaxPlayerDeaths, 'fill-player')}
             ${renderTop10Panel('Guilds · Fame',    '🏆',  allTopGuildsFame,    'fame',   'cell-fame',   allMaxGuildFame,    'fill-guild')}
+          </div>
+          <div class="top10-row-label">🔺 Players</div>
+          <div class="top10-players-row">
+            ${renderTop10Panel('Players · Kills',  '🔺',  allTopPlayers,       'kills',  'value-kills', allMaxPlayerKills,  'fill-player')}
+            ${renderTop10Panel('Players · Deaths', '☠️',  allTopPlayersDeaths, 'deaths', 'cell-deaths', allMaxPlayerDeaths, 'fill-player')}
             ${renderTop10Panel('Players · Fame',   '👑',  allTopPlayersFame,   'fame',   'cell-fame',   allMaxPlayerFame,   'fill-player')}
           </div>
         </div>`;
@@ -1129,87 +1132,12 @@
       const chartId = 'home-chart-' + Date.now();
 
       const html = `
-        <div class="dashboard-grid">
-          <div class="chart-section">
-            <div class="chart-panel">
-              <div class="panel-header"><h3>Kills by Server — All Months (${year})</h3></div>
-              <div class="server-bars-container">${serverBarHtml}</div>
-            </div>
-            <div class="chart-panel chart-panel-canvas">
-              <div class="panel-header"><h3>Monthly Kills Evolution by Server</h3></div>
-              <div class="canvas-wrapper">
-                <canvas id="${chartId}"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-
         ${leaderboardsHtml}
 
         <style>
-          .chart-section {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 16px;
-            margin-bottom: 16px;
-          }
-          .chart-panel {
-            background: var(--card-bg, #1a1a2e);
-            border: 1px solid var(--border-color, #2a2a4a);
-            border-radius: 8px;
-            padding: 0;
-            overflow: hidden;
-          }
-          .server-bars-container {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-          }
-          .server-bar-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          .server-bar-label {
-            width: 72px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted, #aaa);
-            text-transform: uppercase;
-          }
-          .server-bar-track {
-            flex: 1;
-            height: 18px;
-            background: var(--border-color, #2a2a4a);
-            border-radius: 4px;
-            overflow: hidden;
-          }
-          .server-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.6s ease;
-          }
-          .server-bar-value {
-            width: 80px;
-            font-size: 12px;
-            text-align: right;
-            color: var(--text-color, #eee);
-            font-variant-numeric: tabular-nums;
-          }
-          .canvas-wrapper {
-            padding: 12px 16px 16px;
-            position: relative;
-            height: 220px;
-          }
-          .canvas-wrapper canvas {
-            width: 100% !important;
-            height: 100% !important;
-          }
-
           /* ── Top 10 Global Section ───────────────────────────────────── */
           .top10-section {
-            margin-top: 32px;
+            margin-top: 0;
           }
           .top10-header {
             display: flex;
@@ -1222,13 +1150,20 @@
             font-weight: 800;
             color: #ffffff;
           }
-          .top10-grid {
+          .top10-guilds-row,
+          .top10-players-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            margin-bottom: 20px;
           }
-          .top10-grid-6 {
-            grid-template-columns: repeat(6, 1fr);
+          .top10-row-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #475569;
+            margin-bottom: 10px;
           }
           .lb-panel {
             background-color: var(--bg-sidebar);
@@ -1293,102 +1228,18 @@
           .lb-panel .progress-bar-container {
             margin-top: 4px;
           }
-          @media (max-width: 1400px) {
-            .top10-grid-6 { grid-template-columns: repeat(3, 1fr); }
+          @media (max-width: 1100px) {
+            .top10-guilds-row,
+            .top10-players-row { grid-template-columns: repeat(2, 1fr); }
           }
-          @media (max-width: 1200px) {
-            .top10-grid, .top10-grid-6 { grid-template-columns: repeat(2, 1fr); }
-          }
-          @media (max-width: 768px) {
-            .chart-section { grid-template-columns: 1fr; }
-            .top10-grid, .top10-grid-6 { grid-template-columns: 1fr; }
+          @media (max-width: 700px) {
+            .top10-guilds-row,
+            .top10-players-row { grid-template-columns: 1fr; }
           }
         </style>`;
 
       $('#table-wrapper').html(html);
       $('#total-rows').text('DASHBOARD');
-
-      // Renderiza gráfico de linha com Chart.js
-      (function renderChart() {
-        if (typeof Chart === 'undefined') {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-          script.onload = drawChart;
-          document.head.appendChild(script);
-        } else {
-          drawChart();
-        }
-      })();
-
-      function drawChart() {
-        const canvas = document.getElementById(chartId);
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: chartMonths,
-            datasets: [
-              {
-                label: 'Americas',
-                data: chartAmericas,
-                borderColor: '#f0a500',
-                backgroundColor: 'rgba(240,165,0,0.15)',
-                tension: 0.3,
-                fill: true,
-                pointRadius: 4,
-              },
-              {
-                label: 'Europe',
-                data: chartEurope,
-                borderColor: '#4e9af1',
-                backgroundColor: 'rgba(78,154,241,0.15)',
-                tension: 0.3,
-                fill: true,
-                pointRadius: 4,
-              },
-              {
-                label: 'Asia',
-                data: chartAsia,
-                borderColor: '#e05c5c',
-                backgroundColor: 'rgba(224,92,92,0.15)',
-                tension: 0.3,
-                fill: true,
-                pointRadius: 4,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-              legend: {
-                labels: { color: '#ccc', boxWidth: 12, font: { size: 11 } }
-              },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => ' ' + ctx.dataset.label + ': ' + Number(ctx.parsed.y).toLocaleString('en-US') + ' kills',
-                }
-              }
-            },
-            scales: {
-              x: {
-                ticks: { color: '#999', font: { size: 10 } },
-                grid: { color: 'rgba(255,255,255,0.05)' },
-              },
-              y: {
-                ticks: {
-                  color: '#999',
-                  font: { size: 10 },
-                  callback: (v) => Number(v).toLocaleString('en-US'),
-                },
-                grid: { color: 'rgba(255,255,255,0.05)' },
-              },
-            },
-          },
-        });
-      }
 
     } catch (e) {
       if (e && e.name === 'AbortError') return;
