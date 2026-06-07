@@ -352,7 +352,9 @@
       return keys;
     }
     if (STATE.sub === 'WinRate') {
-      keys.push('GUILD', 'WIN', 'LOSS', 'TOTAL', 'WINRATE');
+      if (STATE.main === 'Players') keys.push('PLAYER', 'GUILD');
+      else keys.push('GUILD');
+      keys.push('WIN', 'LOSS', 'TOTAL', 'WINRATE');
       return keys;
     }
     if (STATE.sub === 'Battles') keys.push('TIME', 'BATTLE_ID');
@@ -431,10 +433,12 @@
         }
       }
     } else if (STATE.sub === 'WinRate') {
-      // Win Rate: ./Win Rate/Guilds/{server}/{Month}{Year}.csv
+      // Win Rate: ./Win Rate/Guilds/{server}/{Month}{Year}.csv  (guilds)
+      //           ./Win Rate/Players/{server}/{Month}{Year}.csv (players)
+      const wrFolder = STATE.main === 'Players' ? 'Players' : 'Guilds';
       for (const s of servers) {
         for (const m of months) {
-          paths.push(`./Win Rate/Guilds/${s}/${m}.csv`);
+          paths.push(`./Win Rate/${wrFolder}/${s}/${m}.csv`);
         }
       }
     } else {
@@ -512,6 +516,7 @@
         const iWin = localMap.WIN, iLoss = localMap.LOSS, iTotal = localMap.TOTAL, iWinrate = localMap.WINRATE;
 
         const isWinRate = STATE.sub === 'WinRate';
+        const isWinRatePlayers = isWinRate && STATE.main === 'Players';
         const isBattles = STATE.sub === 'Battles' || STATE.main === 'General';
         const isPlayers = STATE.main === 'Players';
         const isGuilds  = STATE.main === 'Guilds';
@@ -524,14 +529,18 @@
           totalLines++;
 
           if (isWinRate) {
-            const rawName = iGuild !== -1 ? cols[iGuild] : '';
+            // For Players WinRate, key is PLAYER; for Guilds WinRate, key is GUILD
+            const keyIdx = isWinRatePlayers ? iPlayer : iGuild;
+            const rawName = keyIdx !== -1 ? cols[keyIdx] : '';
             const name = rawName ? rawName.trim() : '';
             if (!name || name === '0' || name === '-' || name === '0 - 0') continue;
             const id = name.toLowerCase() + '_' + origin;
             const existing = tempMap[id];
             if (!existing) {
               const row = [];
-              row[iGuild]   = name;
+              row[keyIdx] = name;
+              // For Players WinRate, also store guild
+              if (isWinRatePlayers && iGuild !== -1) row[iGuild] = cols[iGuild] || '';
               if (iWin    !== -1) row[iWin]    = toInt(cols[iWin]);
               if (iLoss   !== -1) row[iLoss]   = toInt(cols[iLoss]);
               if (iTotal  !== -1) row[iTotal]  = toInt(cols[iTotal]);
@@ -652,7 +661,12 @@
       h += `<th class="sortable-th col-num" data-key="KILLS">Kills${arrow('KILLS')}</th>`;
       h += `<th class="sortable-th col-num" data-key="FAME">Fame${arrow('FAME')}</th></tr>`;
     } else if (STATE.sub === 'WinRate') {
-      h += `<th class="sortable-th col-name" data-key="GUILD">Guild${arrow('GUILD')}</th>`;
+      if (STATE.main === 'Players') {
+        h += `<th class="sortable-th col-name" data-key="PLAYER">Player${arrow('PLAYER')}</th>`;
+        h += `<th class="sortable-th col-name" data-key="GUILD">Guild${arrow('GUILD')}</th>`;
+      } else {
+        h += `<th class="sortable-th col-name" data-key="GUILD">Guild${arrow('GUILD')}</th>`;
+      }
       h += `<th class="sortable-th col-num" data-key="WIN">Wins${arrow('WIN')}</th>`;
       h += `<th class="sortable-th col-num" data-key="LOSS">Losses${arrow('LOSS')}</th>`;
       h += `<th class="sortable-th col-num" data-key="TOTAL">Total${arrow('TOTAL')}</th>`;
@@ -775,7 +789,11 @@
         }
         const gIdx = item._localMap.GUILD;
         const gName = (gIdx !== -1 && item[gIdx]) ? String(item[gIdx]).toLowerCase() : '';
-        if (isWinRate) return gName.includes(q);
+        if (isWinRate) {
+          const pIdx = item._localMap.PLAYER;
+          const pName = (pIdx !== -1 && item[pIdx]) ? String(item[pIdx]).toLowerCase() : '';
+          return pName.includes(q) || gName.includes(q);
+        }
         if (isPlayers) {
           const pIdx = item._localMap.PLAYER;
           const pName = (pIdx !== -1 && item[pIdx]) ? String(item[pIdx]).toLowerCase() : '';
@@ -1350,8 +1368,9 @@
         $('#page-title').text('General // Battles');
         $('#page-subtitle').text('Raw records of general battles by server and period.');
       } else if (STATE.sub === 'WinRate') {
-        $('#page-title').text('Guilds // Win Rate');
-        $('#page-subtitle').text('Guild win/loss ratio ranking for the selected period.');
+        const wrEntity = STATE.main === 'Players' ? 'Players' : 'Guilds';
+        $('#page-title').text(`${wrEntity} // Win Rate`);
+        $('#page-subtitle').text(`${wrEntity} win/loss ratio ranking for the selected period.`);
       } else {
         $('#page-title').text((STATE.main === 'Players' ? 'Players' : 'Guilds') + ' // ' + STATE.sub);
         $('#page-subtitle').text(
