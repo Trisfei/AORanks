@@ -376,7 +376,9 @@
     persistFilters(server, monthVal);
 
     if (STATE.view === 'HOME') {
-      $('#global-filters-box').hide();
+      $('#global-filters-box').css('display', 'flex');
+      $('#year-filter-container').hide();
+      $('#month-filter-container').hide();
       $('#search-box-container').hide();
       renderHomeDashboard(server, monthKey, year, signal);
       return;
@@ -986,11 +988,11 @@
           }
         }
 
-        // Leaderboard global anual: todos os meses + servidores exibidos, somados entre servidores
+        // Leaderboard global anual: todos os meses + servidores exibidos
         if (displayServers.includes(srv)) {
           const targetAll = r.kind === 'guild' ? guildAggAll : playerAggAll;
           for (const row of rows) {
-            const id = row.name.toLowerCase();
+            const id = row.name.toLowerCase() + '_' + srv;
             if (!targetAll[id]) {
               targetAll[id] = { ...row, origin: srv };
             } else {
@@ -1045,9 +1047,7 @@
           const nameLine = item.guild && item.guild !== item.name
             ? `<span class="entity-sub" style="color:var(--text-secondary);font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.guild)}</span>`
             : '';
-          const serverTag = (server !== 'global' && item.origin)
-            ? `<span class="server-badge" style="margin-left:4px;vertical-align:middle;">${item.origin.toUpperCase().slice(0,3)}</span>`
-            : '';
+          const serverTag = item.origin ? `<span class="server-badge" style="margin-left:4px;vertical-align:middle;">${item.origin.toUpperCase().slice(0,3)}</span>` : '';
           return `
             <div class="panel-row">
               <div class="row-main-meta">
@@ -1333,6 +1333,7 @@
 
       if (lv.includes('home')) {
         STATE.view = 'HOME';
+        $('#select-server').val('global');
         $('#page-title').text('Home Dashboard');
         $('#page-subtitle').text('Analytical summary of the Albion Online competitive scene.');
         loadData();
@@ -1408,6 +1409,9 @@
         $('#search-input').val('').trigger('input');
       }
     });
+
+    // Se inicia na Home, garante servidor global
+    if (STATE.view === 'HOME') $('#select-server').val('global');
 
     loadData();
   });
