@@ -986,11 +986,11 @@
           }
         }
 
-        // Leaderboard global anual: todos os meses + servidores exibidos
+        // Leaderboard global anual: todos os meses + servidores exibidos, somados entre servidores
         if (displayServers.includes(srv)) {
           const targetAll = r.kind === 'guild' ? guildAggAll : playerAggAll;
           for (const row of rows) {
-            const id = row.name.toLowerCase() + '_' + srv;
+            const id = row.name.toLowerCase();
             if (!targetAll[id]) {
               targetAll[id] = { ...row, origin: srv };
             } else {
@@ -1045,7 +1045,9 @@
           const nameLine = item.guild && item.guild !== item.name
             ? `<span class="entity-sub" style="color:var(--text-secondary);font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.guild)}</span>`
             : '';
-          const serverTag = item.origin ? `<span class="server-badge" style="margin-left:4px;vertical-align:middle;">${item.origin.toUpperCase().slice(0,3)}</span>` : '';
+          const serverTag = (server !== 'global' && item.origin)
+            ? `<span class="server-badge" style="margin-left:4px;vertical-align:middle;">${item.origin.toUpperCase().slice(0,3)}</span>`
+            : '';
           return `
             <div class="panel-row">
               <div class="row-main-meta">
