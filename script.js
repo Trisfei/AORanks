@@ -529,18 +529,19 @@
           totalLines++;
 
           if (isWinRate) {
-            // For Players WinRate, key is PLAYER; for Guilds WinRate, key is GUILD
             const keyIdx = isWinRatePlayers ? iPlayer : iGuild;
             const rawName = keyIdx !== -1 ? cols[keyIdx] : '';
             const name = rawName ? rawName.trim() : '';
             if (!name || name === '0' || name === '-' || name === '0 - 0') continue;
-            const id = name.toLowerCase() + '_' + origin;
+            const guildForKey = (isWinRatePlayers && iGuild !== -1) ? (cols[iGuild] || '').trim() : '';
+            const id = isWinRatePlayers
+              ? name.toLowerCase() + '|' + guildForKey.toLowerCase() + '_' + origin
+              : name.toLowerCase() + '_' + origin;
             const existing = tempMap[id];
             if (!existing) {
               const row = [];
               row[keyIdx] = name;
-              // For Players WinRate, also store guild
-              if (isWinRatePlayers && iGuild !== -1) row[iGuild] = cols[iGuild] || '';
+              if (isWinRatePlayers && iGuild !== -1) row[iGuild] = guildForKey;
               if (iWin    !== -1) row[iWin]    = toInt(cols[iWin]);
               if (iLoss   !== -1) row[iLoss]   = toInt(cols[iLoss]);
               if (iTotal  !== -1) row[iTotal]  = toInt(cols[iTotal]);
