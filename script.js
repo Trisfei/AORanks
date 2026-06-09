@@ -130,7 +130,7 @@
     for (const year of YEARS_TO_SCAN) {
       for (const monthKey of ALL_MONTH_KEYS) {
         const cap = monthKey.charAt(0).toUpperCase() + monthKey.slice(1);
-        const path = `./Guilds/Guilds Total/americasguildsbattlestotal/${cap}${year}.csv`;
+        const path = `./Home/Guilds/americas/Americas.csv`;
         probes.push({ monthKey, year, cap, path });
       }
     }
@@ -920,10 +920,9 @@
       const allGuildPaths = [];
       const allPlayerPaths = [];
       for (const s of allServers) {
-        for (const m of monthsForYear) {
-          allGuildPaths.push({ path: `./Guilds/Guilds Total/${s}guildsbattlestotal/${m.cap}${year}.csv`, server: s, month: m.key });
-          allPlayerPaths.push({ path: `./Players/Players Total/${s}playersbattlestotal/${m.cap}${year}.csv`, server: s, month: m.key });
-        }
+        const capS = s.charAt(0).toUpperCase() + s.slice(1);
+        allGuildPaths.push({ path: `./Home/Guilds/${s}/${capS}.csv`, server: s, month: month });
+        allPlayerPaths.push({ path: `./Home/Players/${s}/${capS}.csv`, server: s, month: month });
       }
 
       const fetchAll = [...allGuildPaths, ...allPlayerPaths].map(({ path, server: s, month: mk }) =>
